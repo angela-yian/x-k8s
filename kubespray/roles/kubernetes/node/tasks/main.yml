@@ -18,19 +18,20 @@
     - kubelet
 
 - import_tasks: nginx-proxy.yml
-  when: is_kube_master == false and loadbalancer_apiserver_localhost
+  when:
+    - not is_kube_master
+    - loadbalancer_apiserver_localhost
+    - loadbalancer_apiserver_type == 'nginx'
   tags:
     - nginx
 
-- name: Write kubelet config file (non-kubeadm)
-  template:
-    src: kubelet.standard.env.j2
-    dest: "{{ kube_config_dir }}/kubelet.env"
-    backup: yes
-  when: not kubeadm_enabled
-  notify: restart kubelet
+- import_tasks: haproxy.yml
+  when:
+    - not is_kube_master
+    - loadbalancer_apiserver_localhost
+    - loadbalancer_apiserver_type == 'haproxy'
   tags:
-    - kubelet
+    - haproxy
 
 - name: Make sure dynamic kubelet configuration directory is writeable
   file:
@@ -44,24 +45,10 @@
     src: kubelet.kubeadm.env.j2
     dest: "{{ kube_config_dir }}/kubelet.env"
     backup: yes
-  when: kubeadm_enabled
   notify: restart kubelet
   tags:
     - kubelet
     - kubeadm
-
-- name: write the kubecfg (auth) file for kubelet
-  template:
-    src: "{{ item }}-kubeconfig.yaml.j2"
-    dest: "{{ kube_config_dir }}/{{ item }}-kubeconfig.yaml"
-    backup: yes
-  with_items:
-    - node
-    - kube-proxy
-  when: not kubeadm_enabled
-  notify: restart kubelet
-  tags:
-    - kubelet
 
 - name: Ensure nodePort range is reserved
   sysctl:
@@ -82,6 +69,11 @@
   register: modinfo_br_netfilter
   failed_when: modinfo_br_netfilter.rc not in [0, 1]
   changed_when: false
+
+- name: Verify br_netfilter module path exists
+  file:
+    path: /etc/modules-load.d
+    state: directory
 
 - name: Enable br_netfilter module
   modprobe:
@@ -124,8 +116,27 @@
     - ip_vs_rr
     - ip_vs_wrr
     - ip_vs_sh
-    - nf_conntrack_ipv4
   when: kube_proxy_mode == 'ipvs'
+  tags:
+    - kube-proxy
+
+- name: Modprobe nf_conntrack_ipv4 for kernels < 4.19
+  modprobe:
+    name: nf_conntrack_ipv4
+    state: present
+  register: enable_nf_conntrack
+  ignore_errors: yes
+  when: kube_proxy_mode == 'ipvs'
+  tags:
+    - kube-proxy
+
+- name: Modprobe nf_conntrack for kernels >= 4.19
+  modprobe:
+    name: nf_conntrack
+    state: present
+  when:
+    - enable_nf_conntrack is failed
+    - kube_proxy_mode == 'ipvs'
   tags:
     - kube-proxy
 
@@ -137,17 +148,12 @@
       ip_vs_rr
       ip_vs_wrr
       ip_vs_sh
+      {% if enable_nf_conntrack is failed -%}
+      nf_conntrack
+      {%-   else -%}
       nf_conntrack_ipv4
+      {%-   endif -%}
   when: kube_proxy_mode == 'ipvs'
-  tags:
-    - kube-proxy
-
-- name: Write proxy manifest
-  template:
-    src: manifests/kube-proxy.manifest.j2
-    dest: "{{ kube_manifest_dir }}/kube-proxy.manifest"
-  when:
-    - not (kubeadm_enabled or kube_proxy_remove)
   tags:
     - kube-proxy
 
@@ -156,12 +162,12 @@
     path: "{{ kube_manifest_dir }}/kube-proxy.manifest"
     state: absent
   when:
-    - kubeadm_enabled or kube_proxy_remove
+    - kube_proxy_remove
   tags:
     - kube-proxy
 
 - name: Cleanup kube-proxy leftovers from node
-  command: "{{ docker_bin_dir }}/docker run --rm --privileged -v /lib/modules:/lib/modules --net=host {{ hyperkube_image_repo }}:{{ hyperkube_image_tag }} kube-proxy --cleanup"
+  command: "{{ bin_dir }}/hyperkube kube-proxy --cleanup"
   when:
     - kube_proxy_remove
   # `kube-proxy --cleanup`, being Ok as per shown WARNING, still returns 255 from above run (?)
@@ -188,7 +194,7 @@
     - cloud_provider is defined
     - cloud_provider == 'openstack'
     - openstack_cacert is defined
-    - openstack_cacert != ""
+    - openstack_cacert
   tags:
     - cloud-provider
 

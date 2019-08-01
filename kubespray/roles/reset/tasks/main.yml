@@ -47,7 +47,8 @@
     - docker
 
 - name: reset | systemctl daemon-reload
-  command: systemctl daemon-reload
+  systemd:
+    daemon_reload: true
   when: services_removed.changed or docker_dropins_removed.changed
 
 - name: reset | remove all containers
@@ -67,6 +68,17 @@
   tags:
     - docker
 
+- name: reset | stop all cri-o containers
+  shell: "crictl ps -aq | xargs -r crictl stop"
+  register: remove_all_crio_containers
+  retries: 4
+  until: remove_all_crio_containers.rc == 0
+  delay: 5
+  tags:
+    - crio
+  when: container_manager == 'crio'
+
+
 - name: reset | remove all cri-o containers
   shell: "crictl ps -aq | xargs -r crictl rm"
   register: remove_all_crio_containers
@@ -77,6 +89,25 @@
     - crio
   when: container_manager == 'crio' and deploy_container_engine|default(true)
 
+- name: reset | stop all cri-o pods
+  shell: "crictl pods -q | xargs -r crictl stopp"
+  register: remove_all_crio_containers
+  retries: 4
+  until: remove_all_crio_containers.rc == 0
+  delay: 5
+  tags:
+    - crio
+  when: container_manager == 'crio'
+
+- name: reset | remove all cri-o pods
+  shell: "crictl pods -q | xargs -r crictl rmp"
+  register: remove_all_crio_containers
+  retries: 4
+  until: remove_all_crio_containers.rc == 0
+  delay: 5
+  tags:
+    - crio
+  when: container_manager == 'crio'
 - name: reset | gather mounted kubelet dirs
   shell: mount | grep /var/lib/kubelet/ | awk '{print $3}' | tac
   args:
@@ -122,6 +153,17 @@
   when:
     - kube_proxy_mode == 'ipvs'
     - kube_ipvs0.stat.exists
+
+- name: reset | check nodelocaldns network device
+  stat:
+    path: /sys/class/net/nodelocaldns
+  register: nodelocaldns_device
+
+- name: reset | Remove nodelocaldns
+  command: "ip link del nodelocaldns"
+  when:
+    - enable_nodelocaldns|default(false)|bool
+    - nodelocaldns_device.stat.exists
 
 - name: reset | delete some files and directories
   file:
@@ -173,7 +215,6 @@
     - "{{ bin_dir }}/calicoctl"
     - "{{ bin_dir }}/calico-upgrade"
     - "{{ bin_dir }}/weave"
-    - /var/lib/rkt
     - /var/lib/cni
     - /etc/vault
     - /etc/contiv
@@ -211,7 +252,7 @@
 - name: reset | include file with reset tasks specific to the network_plugin if exists
   include_tasks: "{{ (role_path + '/../network_plugin/' + kube_network_plugin + '/tasks/reset.yml') | realpath  }}"
   when:
-    - kube_network_plugin in ['flannel', 'cilium', 'contiv', 'kube-router']
+    - kube_network_plugin in ['flannel', 'cilium', 'contiv', 'kube-router', 'calico']
   tags:
     - network
 

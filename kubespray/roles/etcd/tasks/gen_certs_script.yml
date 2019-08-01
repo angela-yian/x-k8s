@@ -68,7 +68,6 @@
   delegate_to: "{{groups['etcd'][0]}}"
   when:
     - gen_certs|default(false)
-    - inventory_hostname == groups['etcd'][0]
   notify: set etcd_secret_changed
 
 - name: Gen_certs | Gather etcd master certs
@@ -107,6 +106,8 @@
     - inventory_hostname in groups['etcd']
     - sync_certs|default(false)
     - inventory_hostname != groups['etcd'][0]
+  loop_control:
+    label: "{{ item.item }}"
 
 - set_fact:
     my_etcd_node_certs: ['ca.pem',
