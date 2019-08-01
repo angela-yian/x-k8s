@@ -154,4 +154,6 @@
     - run_nfd
     - run_cmk
     - {role: run_sriov, when: "sriov_enabled |  default(false) "}
+    - {role: install_efk, when: "install_efk | default(false) "}
+
 
