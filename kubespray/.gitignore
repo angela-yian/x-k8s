@@ -16,10 +16,9 @@ contrib/terraform/aws/credentials.tfvars
 vagrant/
 
 # Ansible inventory
-inventory/*
 !inventory/local
 !inventory/sample
-inventory/*/artifacts/
+!inventory/mycluster
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
