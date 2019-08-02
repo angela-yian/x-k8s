@@ -2,7 +2,7 @@
 
 X-K8S leverages plugins for the better NFV performance in 5G use senario, like CMK (Cpu Manager for Kubernetes),  
 NFD (Node Feature Discovery), intel's userspace-cni-network-plugin, etc.  
-And based on the kubespray v2.8.0 as its deploy tool.  
+And based on the kubespray v2.10.4 as its deploy tool.  
 
 For the detail deploy instruction, check the kubespray's [readme](https://github.com/mJace/x-k8s/blob/develop/kubespray/README.md).  
 
@@ -10,10 +10,10 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 
 |    Package    |    version    |
 |---------------|---------------|
-|Kubernetes     |v1.12.3        |
+|Kubernetes     |v1.14.3        |
 |Docker         |v18.06.1-ce    |
 |CMK            |v1.3.1         |
-|NFD            |v0.3.0         |
+|NFD            |v0.4.0         |
 |Multus         |v3.2           |
 |Flannel        |v0.10.0        |
 |Flannel-CNI    |v0.3.0         |

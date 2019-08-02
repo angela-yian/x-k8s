@@ -19,6 +19,7 @@ vagrant/
 !inventory/local
 !inventory/sample
 !inventory/mycluster
+inventory/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

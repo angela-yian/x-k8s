@@ -30,4 +30,5 @@
 ---
 nfd_dir: "/opt/nfd"
 kube_create: "kubectl create -f"
+kube_apply: "kubectl apply -f"
 kubeconfig: "/etc/kubernetes/admin.conf"
