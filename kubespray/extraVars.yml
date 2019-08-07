@@ -6,7 +6,11 @@ kube_network_plugin: flannel
 kube_network_plugin_multus: true
 
 ## SRIOV Support
-sriov_enabled : false
+sriov_enabled : true
+
+## Monitor install Prometheus and Grafana
+monitor_enabled: true
+grafana_password: "admin"
 
 ## Enable basic auth
 # kube_basic_auth: true

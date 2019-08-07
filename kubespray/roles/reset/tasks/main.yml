@@ -182,6 +182,9 @@
     - /etc/openvswitch
     - /run/openvswitch
     - /var/lib/kube-router
+    - '{{ charts_dir }}'
+    - '{{ monitor_dir }}'
+    - /data
   ignore_errors: yes
   tags:
     - files

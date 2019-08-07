@@ -155,3 +155,11 @@
     - run_cmk
     - {role: run_sriov, when: "sriov_enabled |  default(false) "}
 
+- hosts: k8s-cluster
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  roles:
+    - { role: monitor_tools/predeploy, when: "monitor_enabled | default(false)" }
+- hosts: kube-master
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  roles:
+    - { role: monitor_tools/prometheus_grafana, when: "monitor_enabled | default(false)" }
