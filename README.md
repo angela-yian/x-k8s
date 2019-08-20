@@ -19,6 +19,9 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 |Flannel-CNI    |v0.3.0         |
 |SRIOV-CNI      |v1.0.0         |
 |SRIOV-Device Plugin |v2.0      | 
+|Fluentd        |v2.2.0         |
+|Elasticsearch  |v6.3.2         |
+|Kibana         |v6.3.2         |
 
 ## Deploy Node Requirement
 

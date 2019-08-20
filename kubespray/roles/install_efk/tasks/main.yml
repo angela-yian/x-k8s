@@ -1,0 +1,90 @@
+#
+# Install Elasticsearch, Fluentd, Kibana
+# 
+
+---
+- name: Label node for Fluentd
+  command: "kubectl label nodes {{ item }} beta.kubernetes.io/fluentd-ds-ready=true"
+  with_items: "{{ groups.all }}"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+
+- name: Copy Fluentd ConfigMap
+  copy:
+    dest: "{{ kube_config_dir }}/fluentd-es-configmap.yml"
+    src: "fluentd-es-configmap.yml"
+
+- name: Apply Fluentd ConfigMap
+  command: "{{ kube_create }} {{ kube_config_dir }}/fluentd-es-configmap.yml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+
+- name: Copy Fluentd DaemonSet
+  copy:
+    dest: "{{ kube_config_dir }}/fluentd-es-ds.yml"
+    src: "fluentd-es-ds.yml"
+
+- name: Apply Fluentd DaemonSet
+  command: "{{ kube_create }} {{ kube_config_dir }}/fluentd-es-ds.yml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+
+- name: Copy Elasticsearch StatefulSet
+  copy:
+    dest: "{{ kube_config_dir }}/es-statefulset.yml"
+    src: "es-statefulset.yml"
+
+- name: Apply Elasticsearch StatefulSet
+  command: "{{ kube_create }} {{ kube_config_dir }}/es-statefulset.yml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+
+- name: Copy Elasticsearch Service
+  copy:
+    dest: "{{ kube_config_dir }}/es-service.yml"
+    src: "es-service.yml"
+
+- name: Apply Elasticsearch Service
+  command: "{{ kube_create }} {{ kube_config_dir }}/es-service.yml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+
+- name: Copy Kibana Deployment
+  copy:
+    dest: "{{ kube_config_dir }}/kibana-deployment.yml"
+    src: "kibana-deployment.yml"
+
+- name: Apply Kibana Deployment
+  command: "{{ kube_create }} {{ kube_config_dir }}/kibana-deployment.yml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+
+- name: Copy Kibana Service
+  copy:
+    dest: "{{ kube_config_dir }}/kibana-service.yml"
+    src: "kibana-service.yml"
+
+- name: Apply Kibana Service
+  command: "{{ kube_create }} {{ kube_config_dir }}/kibana-service.yml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+
+- name: Copy OpenApi for Kibana Dashboard
+  copy:
+    dest: "{{ kube_config_dir }}/openapi.yml"
+    src: "openapi.yml"
+
+- name: Apply OpenApi for Kibana Dashboard
+  command: "{{ kube_create }} {{ kube_config_dir }}/openapi.yml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+
+
