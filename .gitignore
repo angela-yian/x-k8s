@@ -1,0 +1,6 @@
+# Ansible inventory
+kubespray/inventory/*
+!kubespray/inventory/local
+!kubespray/inventory/sample
+!kubespray/inventory/mycluster
+!kubespray/inventory/*/artifacts/
