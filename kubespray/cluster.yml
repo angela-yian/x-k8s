@@ -89,10 +89,11 @@
     - { role: kubernetes-apps/rotate_tokens, tags: rotate_tokens, when: "secret_changed|default(false)" }
     - { role: win_nodes/kubernetes_patch, tags: ["master", "win_nodes"]}
 
-- hosts: k8s-cluster		
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"		
-  roles:		
-    - {role: build_sriov, when: "sriov_enabled |  default(false) "}		
+- hosts: k8s-cluster
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  roles:
+    - build_cmk
+    - {role: build_sriov, when: "sriov_enabled |  default(false) "}
 
 - hosts: kube-master
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
@@ -122,8 +123,9 @@
     - { role: kubespray-defaults}
     - { role: kubernetes/preinstall, when: "dns_mode != 'none' and resolvconf_mode == 'host_resolvconf'", tags: resolvconf, dns_late: true }
 
-- hosts: kube-master		
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"		
-  roles:		
-    - run_nfd		
+- hosts: kube-master
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  roles:
+    - run_nfd
+    - run_cmk
     - {role: run_sriov, when: "sriov_enabled |  default(false) "}
