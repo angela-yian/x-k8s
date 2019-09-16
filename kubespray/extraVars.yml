@@ -15,3 +15,6 @@ sriov_enabled : true
 
 ## Change default NodePort range 
 # kube_apiserver_node_port_range: "9000-32767"
+
+## Install Elasticsearch, Fluentd, Kibana
+install_efk : true 
