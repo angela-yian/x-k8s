@@ -15,10 +15,10 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 |CMK            |v1.3.1         |
 |NFD            |v0.4.0         |
 |Multus         |v3.2           |
-|Flannel        |v0.10.0        |
+|Flannel        |v0.11.0        |
 |Flannel-CNI    |v0.3.0         |
-|SRIOV-CNI      |v1.0.0         |
-|SRIOV-Device Plugin |v2.0      | 
+|SRIOV-CNI      |v2.1.0         |
+|SRIOV-Device Plugin |v3.0      | 
 
 ## Deploy Node Requirement
 
@@ -29,7 +29,7 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 
 |  Package   |    version          |
 |------------|---------------------|
-|  Supported Os | Ubuntu 18.04 LTS Server |
+|  Supported OS | Ubuntu 18.04 LTS Server |
 
 
 ## Usage  
@@ -48,15 +48,17 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
     [
         {
             "resourceName": "sriov_net_A",
-            "rootDevices": ["02:00.0", "02:00.2"],
-            "sriovMode": true,
-            "deviceType": "netdevice"
+            "selectors": {
+                "vendors": ["8086"],
+                "pfNames" : ["enp4s0f0"]
+            }
         },
         {
             "resourceName": "sriov_net_B",
-            "rootDevices": ["02:00.1", "02:00.3"],
-            "sriovMode": true,
-            "deviceType": "vfio"
+            "selectors": {
+                "vendors": ["8086"],
+                "pfNames" : ["enp4s0f1"]
+            }
         }
     ]
 }
@@ -82,10 +84,10 @@ ssh-copy-id <node1_ip>
 
 2. Edit hosts.ini in `/x-k8s/kubespray/inventory/mycluster/hosts.ini`  
 
-3. Edit /x-k8s/kubespray/extraVars.yml  
+3. Edit /x-k8s/kubespray/extraVars.yml to turn to feature you want.
 ```yaml=
 
-## Helm deployment 
+## Helm deployment
 helm_enabled: true
 
 ## Multus deployment
@@ -93,8 +95,11 @@ kube_network_plugin: flannel
 kube_network_plugin_multus: true
 
 ## SRIOV Support
-## Only set to true when you know what you are doing.
-sriov_enabled : false 
+sriov_enabled : true
+
+## Monitor install Prometheus and Grafana
+monitor_enabled: false
+grafana_password: "admin"
 
 ## Enable basic auth
 # kube_basic_auth: true
@@ -103,6 +108,10 @@ sriov_enabled : false
 
 ## Change default NodePort range 
 # kube_apiserver_node_port_range: "9000-32767"
+
+## Install Elasticsearch, Fluentd, Kibana
+install_efk : false
+
 ```
 
 4. Deploy  
