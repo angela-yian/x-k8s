@@ -63,7 +63,7 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
     ]
 }
 ```
-Go check [SRIOV manual](https://github.com/ITRI-ICL-Peregrine/x-k8s/blob/develop/docs/sriov.md) for more information.  
+Go check [SRIOV manual](https://github.com/ITRI-ICL-Peregrine/x-k8s/blob/master/docs/sriov.md) for more information.  
   
 3. Enable root account and allow root remote login for **each node**.   
 4. Set password free login for root of deploy node **on each node**    
