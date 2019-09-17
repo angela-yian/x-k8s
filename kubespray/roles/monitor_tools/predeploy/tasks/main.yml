@@ -1,0 +1,19 @@
+#
+# Create dir for pv,pvc mount
+#
+---
+- name: create pv,pvc mount directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /data/prometheus/alertmanager
+    - /data/prometheus/pushgateway
+    - /data/prometheus/server
+    - /data/grafana
+- name: Change file ownership, group and permissions for Prometheus server
+  file:
+    path: /data/prometheus/server
+    owner: 65534
+    group: 65534
+    mode: 0777
