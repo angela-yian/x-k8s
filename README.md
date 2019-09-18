@@ -90,7 +90,7 @@ ssh-copy-id <node1_ip>
 
 2. Edit hosts.ini in `/x-k8s/kubespray/inventory/mycluster/hosts.ini`  
 
-3. Edit /x-k8s/kubespray/extraVars.yml to turn to feature you want.
+3. Edit /x-k8s/kubespray/extraVars.yml to turn on the feature you want.
 ```yaml=
 
 ## Helm deployment
