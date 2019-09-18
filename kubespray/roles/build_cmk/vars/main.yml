@@ -30,4 +30,4 @@
 ---
 cmk_dir: "/opt/cmk"
 cmk_repo: "https://github.com/intel/CPU-Manager-for-Kubernetes.git"
-cmk_branch: "77f784dd368f96d77e0bb381b071ce3a11bbe189"
+cmk_branch: "36f50eea5159466b7141432ca6bc2640f0762c2b"

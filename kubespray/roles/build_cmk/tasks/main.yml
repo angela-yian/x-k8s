@@ -52,7 +52,7 @@
 
   - name: Pull CMK v1.3.1 image
     docker_image:
-      name: mjace/cmk:v1.3.1
+      name: mjace/cmk:v1.3.1-0916
     retries: 5
     register: reg
     until: reg | success

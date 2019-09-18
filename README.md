@@ -2,7 +2,7 @@
 
 X-K8S leverages plugins for the better NFV performance in 5G use senario, like CMK (Cpu Manager for Kubernetes),  
 NFD (Node Feature Discovery), intel's userspace-cni-network-plugin, etc.  
-And based on the kubespray v2.8.0 as its deploy tool.  
+And based on the kubespray v2.10.4 as its deploy tool.  
 
 For the detail deploy instruction, check the kubespray's [readme](https://github.com/mJace/x-k8s/blob/develop/kubespray/README.md).  
 
@@ -10,18 +10,21 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 
 |    Package    |    version    |
 |---------------|---------------|
-|Kubernetes     |v1.12.3        |
+|Kubernetes     |v1.14.3        |
 |Docker         |v18.06.1-ce    |
 |CMK            |v1.3.1         |
-|NFD            |v0.3.0         |
+|NFD            |v0.4.0         |
 |Multus         |v3.2           |
-|Flannel        |v0.10.0        |
+|Flannel        |v0.11.0        |
 |Flannel-CNI    |v0.3.0         |
-|SRIOV-CNI      |v1.0.0         |
-|SRIOV-Device Plugin |v2.0      | 
-|Fluentd        |v2.2.0         |
-|Elasticsearch  |v6.3.2         |
+|SRIOV-CNI      |v2.1.0         |
+|SRIOV-Device Plugin |v3.0      | 
+|Prometheus     |v2.11.1        |
+|Grafana        |v6.2.5         |
+|Elastic Search |v6.3.2         |
 |Kibana         |v6.3.2         |
+|fluentd        |v2.2.0         |
+
 
 ## Deploy Node Requirement
 
@@ -32,7 +35,7 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 
 |  Package   |    version          |
 |------------|---------------------|
-|  Supported Os | Ubuntu 18.04 LTS Server |
+|  Supported OS | Ubuntu 18.04 LTS Server |
 
 
 ## Usage  
@@ -47,24 +50,26 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 
 ```
 {
-    "resourceList":
-    [
-        {
-            "resourceName": "sriov_net_A",
-            "rootDevices": ["02:00.0", "02:00.2"],
-            "sriovMode": true,
-            "deviceType": "netdevice"
-        },
-        {
-            "resourceName": "sriov_net_B",
-            "rootDevices": ["02:00.1", "02:00.3"],
-            "sriovMode": true,
-            "deviceType": "vfio"
-        }
-    ]
+  "resourceList": 
+  [
+    {
+      "resourceName": "sriov_pool_a",
+      "selectors": {
+        "vendors": ["8086"],
+        "pfNames" : ["enp4s0f0"]
+      }
+    },
+    {
+      "resourceName": "sriov_pool_b",
+      "selectors": {
+        "vendors": ["8086"],
+        "pfNames" : ["enp129s0f0"]
+      }
+    }
+  ]
 }
 ```
-Go check [SRIOV manual](https://github.com/mJace/x-k8s/blob/develop/docs/sriov.md) for more information.  
+Go check [SRIOV manual](https://github.com/ITRI-ICL-Peregrine/x-k8s/blob/master/docs/sriov.md) for more information.  
   
 3. Enable root account and allow root remote login for **each node**.   
 4. Set password free login for root of deploy node **on each node**    
@@ -85,10 +90,10 @@ ssh-copy-id <node1_ip>
 
 2. Edit hosts.ini in `/x-k8s/kubespray/inventory/mycluster/hosts.ini`  
 
-3. Edit /x-k8s/kubespray/extraVars.yml  
+3. Edit /x-k8s/kubespray/extraVars.yml to turn to feature you want.
 ```yaml=
 
-## Helm deployment 
+## Helm deployment
 helm_enabled: true
 
 ## Multus deployment
@@ -96,8 +101,11 @@ kube_network_plugin: flannel
 kube_network_plugin_multus: true
 
 ## SRIOV Support
-## Only set to true when you know what you are doing.
-sriov_enabled : false 
+sriov_enabled : true
+
+## Monitor install Prometheus and Grafana
+monitor_enabled: false
+grafana_password: "admin"
 
 ## Enable basic auth
 # kube_basic_auth: true
@@ -106,6 +114,10 @@ sriov_enabled : false
 
 ## Change default NodePort range 
 # kube_apiserver_node_port_range: "9000-32767"
+
+## Install Elasticsearch, Fluentd, Kibana
+install_efk : false
+
 ```
 
 4. Deploy  

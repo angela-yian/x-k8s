@@ -1,31 +1,17 @@
 ---
 - hosts: localhost
   gather_facts: false
+  become: no
   tasks:
-    - name: "Check ansible version !=2.7.0"
+    - name: "Check ansible version >=2.7.8"
       assert:
-        msg: "Ansible V2.7.0 can't be used until: https://github.com/ansible/ansible/issues/46600 is fixed"
+        msg: "Ansible must be v2.7.8 or higher"
         that:
-          - ansible_version.string is version("2.7.0", "!=")
-          - ansible_version.string is version("2.5.0", ">=")
+          - ansible_version.string is version("2.7.8", ">=")
       tags:
         - check
   vars:
     ansible_connection: local
-
-- hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: deploy warning for non kubeadm
-      debug:
-        msg: "DEPRECATION: non-kubeadm deployment is deprecated from v2.9. Will be removed in next release."
-      when: not kubeadm_enabled and not skip_non_kubeadm_warning
-
-    - name: deploy cluster for non kubeadm
-      pause:
-        prompt: "Are you sure you want to deploy cluster using the deprecated non-kubeadm mode."
-        echo: no
-      when: not kubeadm_enabled and not skip_non_kubeadm_warning
 
 - hosts: bastion[0]
   gather_facts: False
@@ -36,26 +22,22 @@
 - hosts: k8s-cluster:etcd:calico-rr
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   gather_facts: false
-  vars:
-    # Need to disable pipelining for bootstrap-os as some systems have requiretty in sudoers set, which makes pipelining
-    # fail. bootstrap-os fixes this on these systems, so in later plays it can be enabled.
-    ansible_ssh_pipelining: false
   roles:
     - { role: kubespray-defaults}
     - { role: bootstrap-os, tags: bootstrap-os}
-    - { role: install_go}
 
 - hosts: k8s-cluster:etcd:calico-rr
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   vars:
     ansible_ssh_pipelining: true
-  gather_facts: true
+  gather_facts: false
   pre_tasks:
     - name: gather facts from all instances
       setup:
       delegate_to: "{{item}}"
-      delegate_facts: True
+      delegate_facts: true
       with_items: "{{ groups['k8s-cluster'] + groups['etcd'] + groups['calico-rr']|default([]) }}"
+      run_once: true
 
 - hosts: k8s-cluster:etcd:calico-rr
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
@@ -85,12 +67,6 @@
     - { role: kubernetes/node, tags: node }
   environment: "{{proxy_env}}"
 
-- hosts: k8s-cluster
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
-  roles:
-    - build_intel_userspace_cni
-    - build_cmk
-
 - hosts: kube-master
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:
@@ -103,7 +79,7 @@
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:
     - { role: kubespray-defaults}
-    - { role: kubernetes/kubeadm, tags: kubeadm, when: "kubeadm_enabled" }
+    - { role: kubernetes/kubeadm, tags: kubeadm}
     - { role: network_plugin, tags: network }
 
 - hosts: kube-master[0]
@@ -111,12 +87,12 @@
   roles:
     - { role: kubespray-defaults}
     - { role: kubernetes-apps/rotate_tokens, tags: rotate_tokens, when: "secret_changed|default(false)" }
-    - { role: win_nodes/kubernetes_patch, tags: ["master", "win_nodes"], when: "kubeadm_enabled" }
+    - { role: win_nodes/kubernetes_patch, tags: ["master", "win_nodes"]}
 
 - hosts: k8s-cluster
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:
-    - build_nfd
+    - build_cmk
     - {role: build_sriov, when: "sriov_enabled |  default(false) "}
 
 - hosts: kube-master
@@ -134,19 +110,18 @@
     - { role: kubespray-defaults}
     - { role: network_plugin/calico/rr, tags: network }
 
-- hosts: k8s-cluster
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
-  roles:
-    - { role: kubespray-defaults}
-    - { role: dnsmasq, when: "dns_mode == 'dnsmasq_kubedns'", tags: dnsmasq }
-    - { role: kubernetes/preinstall, when: "dns_mode != 'none' and resolvconf_mode == 'host_resolvconf'", tags: resolvconf, dns_late: true }
-  environment: "{{proxy_env}}"
-
 - hosts: kube-master
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:
     - { role: kubespray-defaults}
     - { role: kubernetes-apps, tags: apps }
+  environment: "{{proxy_env}}"
+
+- hosts: k8s-cluster
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  roles:
+    - { role: kubespray-defaults}
+    - { role: kubernetes/preinstall, when: "dns_mode != 'none' and resolvconf_mode == 'host_resolvconf'", tags: resolvconf, dns_late: true }
 
 - hosts: kube-master
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
@@ -156,11 +131,11 @@
     - {role: run_sriov, when: "sriov_enabled |  default(false) "}
     - {role: install_efk, when: "install_efk | default(false) "}
 
-
 - hosts: k8s-cluster
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:
     - { role: monitor_tools/predeploy, when: "monitor_enabled | default(false)" }
+
 - hosts: kube-master
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:

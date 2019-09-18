@@ -32,13 +32,19 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
+  - name: create cmk name space
+    command: "{{ kube_create }} {{ cmk_dir}}/resources/authorization/cmk-namespace.yaml"
+    environment:
+      KUBECONFIG: "{{ kubeconfig }}"
+    ignore_errors: true
+
   - name: create cmk rbac rules
     command: "{{ kube_create }} {{ cmk_dir}}/resources/authorization/cmk-rbac-rules.yaml"
     environment:
       KUBECONFIG: "{{ kubeconfig }}"
     ignore_errors: true
 
-  - name: create cmkservice account
+  - name: create cmk service account
     command: "{{ kube_create }} {{ cmk_dir }}/resources/authorization/cmk-serviceaccount.yaml"
     environment:
       KUBECONFIG: "{{ kubeconfig }}"
@@ -50,14 +56,14 @@
       src: "cmk-cluster-init-pod.yaml"
 
   - name: run cmk cluster init
-    command: "{{ kube_create }} {{ kube_config_dir }}/cmk-cluster-init-pod.yaml"
+    command: "{{ kube_create }} {{ kube_config_dir }}/cmk-cluster-init-pod.yaml -n cmk-namespace"
     environment:
       KUBECONFIG: "{{ kubeconfig }}"
     ignore_errors: true
 
-  - name: wait 30 sec
+  - name: wait 40 sec
     pause:
-      seconds: 30
+      seconds: 40
 
   - name: delete cmk taint
     command: "kubectl taint nodes {{ item }} cmk:NoSchedule-"

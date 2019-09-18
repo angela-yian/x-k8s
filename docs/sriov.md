@@ -1,27 +1,5 @@
 # X-K8S SRIOV Manual 
 
-## Supported SRIOV NICs
-
-The following  NICs were tested with this implementation. However, other SRIOV capable NICs should work as well.  
-
-- Intel® Ethernet Controller X710 Series 4x10G
-  - PF driver : > v2.4.6  
-  - VF driver: > v3.5.6  
-
-> please refer to Intel download center for installing latest [Intel Ethernet Controller-X710-Series](https://downloadcenter.intel.com/product/82947/Intel-Ethernet-Controller-X710-Series) drivers  
-
-- Intel 82599ES 10 Gigabit Ethernet Controller  
-  - PF driver : > v4.4.0-k
-  - VF driver:  > v3.2.2-k  
-  
-> please refer to Intel download center for installing latest [Intel-® 82599ES 10 Gigabit Ethernet](https://ark.intel.com/products/41282/Intel-82599ES-10-Gigabit-Ethernet-Controller) drivers  
-
-- Mellanox ConnectX-4 Lx EN Adapter  
-- Mellanox ConnectX-5 Adapter  
-
-> Network card drivers are available as a part of the various linux distributions and upstream.
-To download the latest Mellanox NIC drivers, click [here](http://www.mellanox.com/page/software_overview_eth).
-
 ## Pre-Configure Before you install X-K8S  
 
 1. Make sure your SRIOV NIC PF is pluged in with cable and Linked-up.  
@@ -40,24 +18,43 @@ To download the latest Mellanox NIC drivers, click [here](http://www.mellanox.co
     echo 8 > /sys/class/net/enp129s0f0/device/sriov_numvfs
     ```
 
-3. Edit/Create `/etc/pcidp/config.json` on node with SRIOV
+3. Edit/Create `/etc/pcidp/config.json` on node with SRIOV nic.
     e.g.
 
-    ```json=
+    ```json
     {
-        "resourceList":
-        [
-            {
-                "resourceName": "sriov_net_A",
-                "rootDevices": ["02:00.0", "02:00.2"],
-                "sriovMode": true,
-                "deviceType": "netdevice"
+        "resourceList": [{
+                "resourceName": "intel_sriov_netdevice",
+                "selectors": {
+                    "vendors": ["8086"],
+                    "devices": ["154c", "10ed"],
+                    "drivers": ["i40evf", "ixgbevf"]
+                }
             },
             {
-                "resourceName": "sriov_net_B",
-                "rootDevices": ["02:00.1", "02:00.3"],
-                "sriovMode": true,
-                "deviceType": "vfio"
+                "resourceName": "intel_sriov_dpdk",
+                "selectors": {
+                    "vendors": ["8086"],
+                    "devices": ["154c", "10ed"],
+                    "drivers": ["vfio-pci"],
+                    "pfNames": ["enp0s0f0","enp2s2f1"]
+                }
+            },
+            {
+                "resourceName": "mlnx_sriov_rdma",
+                "isRdma": true,
+                "selectors": {
+                    "vendors": ["15b3"],
+                    "devices": ["1018"],
+                    "drivers": ["mlx5_ib"]
+                }
+            },
+            {
+                "resourceName": "infiniband_rdma_netdevs",
+                "isRdma": true,
+                "selectors": {
+                    "linkTypes": ["infiniband"]
+                }
             }
         ]
     }
@@ -65,14 +62,14 @@ To download the latest Mellanox NIC drivers, click [here](http://www.mellanox.co
 
     `"resourceList"` should contain a list of config objects. Each config object may consist of following fields:
 
-    |     Field      | Required |                    Description                    |                       Type - Accepted values                        |         Example          |
-    |----------------|----------|---------------------------------------------------|---------------------------------------------------------------------|--------------------------|
-    | "resourceName" | Yes      | Endpoint resource name                            | `string` - must be unique and should not contain special characters | `"sriov_net_A"`          |
-    | "rootDevices"  | Yes      | List of PCI address for a resource pool           | A list of `string` - in sysfs pci address format                    | `["02:00.0", "02:00.2"]` |
-    | "sriovMode"    | No       | Whether the root devices are SRIOV capable or not | `bool` - true OR false[default]                                     | `true`                   |
-    | "deviceType"   | No       | Device driver type                                | `string` - "netdevice"\|"uio"\|"vfio"                               | `"netdevice"`            |
+    |     Field      | Required |        Description        |                      Type - Accepted values                       |                                      Example/Accepted values                                       |
+    |----------------|----------|---------------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+    | "resourceName" | Yes      | Endpoint resource name    | string - must be unique and should not contain special characters | "sriov_net_A"                                                                                      |
+    | "selectors"    | No       | A map of device selectors | Each selector is a map of string list.                            | "vendors": ["8086"], "devices": ["154c", "10ed"], "drivers": ["vfio-pci"], "pfNames": ["enp2s2f0"], "linkTypes": ["ether"] |
+    | "isRdma"       | No       | Mount RDMA resources      | `bool` - boolean value true or false                              | "isRdma": true                                                                                     |
 
     You can check the PF bus address by `lshw -class network -businfo`  
+    You can check the NIC's vendor and device ID by `lspci -nn`
 
 ## Install X-K8S
 
@@ -146,6 +143,7 @@ root@node1:~# kubectl get node node2 -o json | jq .status.capacity
     spec:
       config: '{
       "type": "sriov",
+      "cniVersion" : "v0.3.1",
       "vlan": 1000,
       "ipam": {
         "type": "host-local",
@@ -159,8 +157,9 @@ root@node1:~# kubectl get node node2 -o json | jq .status.capacity
       }
     }'
     ```
+    If you want to define the interface name go check [HERE](https://github.com/intel/multus-cni/blob/master/doc/how-to-use.md#lauch-pod-with-text-annotation-for-networkattachmentdefinition-in-different-namespace)
 
-2. Create and apply the pod.
+1. Create and apply the pod.
     e.g.
 
     ```yaml=
@@ -186,4 +185,4 @@ root@node1:~# kubectl get node node2 -o json | jq .status.capacity
             intel.com/sriov_net_A: '1'
     ```
 
-3. You should see a nic in pod with the same net CIDR you define in "sriov-net-a"
+2. You should see a nic in pod with the same net CIDR you define in "sriov-net-a"
