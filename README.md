@@ -19,6 +19,12 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 |Flannel-CNI    |v0.3.0         |
 |SRIOV-CNI      |v2.1.0         |
 |SRIOV-Device Plugin |v3.0      | 
+|Prometheus     |v2.11.1        |
+|Grafana        |v6.2.5         |
+|Elastic Search |v6.3.2         |
+|Kibana         |v6.3.2         |
+|fluentd        |v2.2.0         |
+
 
 ## Deploy Node Requirement
 
@@ -44,23 +50,23 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 
 ```
 {
-    "resourceList":
-    [
-        {
-            "resourceName": "sriov_net_A",
-            "selectors": {
-                "vendors": ["8086"],
-                "pfNames" : ["enp4s0f0"]
-            }
-        },
-        {
-            "resourceName": "sriov_net_B",
-            "selectors": {
-                "vendors": ["8086"],
-                "pfNames" : ["enp4s0f1"]
-            }
-        }
-    ]
+  "resourceList": 
+  [
+    {
+      "resourceName": "sriov_pool_a",
+      "selectors": {
+        "vendors": ["8086"],
+        "pfNames" : ["enp4s0f0"]
+      }
+    },
+    {
+      "resourceName": "sriov_pool_b",
+      "selectors": {
+        "vendors": ["8086"],
+        "pfNames" : ["enp129s0f0"]
+      }
+    }
+  ]
 }
 ```
 Go check [SRIOV manual](https://github.com/ITRI-ICL-Peregrine/x-k8s/blob/master/docs/sriov.md) for more information.  

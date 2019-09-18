@@ -1,27 +1,5 @@
 # X-K8S SRIOV Manual 
 
-## Supported SRIOV NICs
-
-The following  NICs were tested with this implementation. However, other SRIOV capable NICs should work as well.  
-
-- Intel® Ethernet Controller X710 Series 4x10G
-  - PF driver : > v2.4.6  
-  - VF driver: > v3.5.6  
-
-> please refer to Intel download center for installing latest [Intel Ethernet Controller-X710-Series](https://downloadcenter.intel.com/product/82947/Intel-Ethernet-Controller-X710-Series) drivers  
-
-- Intel 82599ES 10 Gigabit Ethernet Controller  
-  - PF driver : > v4.4.0-k
-  - VF driver:  > v3.2.2-k  
-  
-> please refer to Intel download center for installing latest [Intel-® 82599ES 10 Gigabit Ethernet](https://ark.intel.com/products/41282/Intel-82599ES-10-Gigabit-Ethernet-Controller) drivers  
-
-- Mellanox ConnectX-4 Lx EN Adapter  
-- Mellanox ConnectX-5 Adapter  
-
-> Network card drivers are available as a part of the various linux distributions and upstream.
-To download the latest Mellanox NIC drivers, click [here](http://www.mellanox.com/page/software_overview_eth).
-
 ## Pre-Configure Before you install X-K8S  
 
 1. Make sure your SRIOV NIC PF is pluged in with cable and Linked-up.  
@@ -91,7 +69,7 @@ To download the latest Mellanox NIC drivers, click [here](http://www.mellanox.co
     | "isRdma"       | No       | Mount RDMA resources      | `bool` - boolean value true or false                              | "isRdma": true                                                                                     |
 
     You can check the PF bus address by `lshw -class network -businfo`  
-    You can check the NIC's vendor ID by `lspci -nn`
+    You can check the NIC's vendor and device ID by `lspci -nn`
 
 ## Install X-K8S
 
@@ -179,8 +157,9 @@ root@node1:~# kubectl get node node2 -o json | jq .status.capacity
       }
     }'
     ```
+    If you want to define the interface name go check [HERE](https://github.com/intel/multus-cni/blob/master/doc/how-to-use.md#lauch-pod-with-text-annotation-for-networkattachmentdefinition-in-different-namespace)
 
-2. Create and apply the pod.
+1. Create and apply the pod.
     e.g.
 
     ```yaml=
@@ -206,8 +185,4 @@ root@node1:~# kubectl get node node2 -o json | jq .status.capacity
             intel.com/sriov_net_A: '1'
     ```
 
-3. You should see a nic in pod with the same net CIDR you define in "sriov-net-a"
-
-### Misc
-To define the interface name, go check   
-https://github.com/intel/multus-cni/blob/master/doc/how-to-use.md#lauch-pod-with-text-annotation-for-networkattachmentdefinition-in-different-namespace
+2. You should see a nic in pod with the same net CIDR you define in "sriov-net-a"
