@@ -18,6 +18,10 @@
     recursive: no
     force: yes
 
+- name: Install glide
+  apt: 
+    name: golang-glide
+
 - name: Build sriov cni
   command: "make"
   args:
