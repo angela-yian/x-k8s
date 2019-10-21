@@ -143,7 +143,7 @@ root@node1:~# kubectl get node node2 -o json | jq .status.capacity
     spec:
       config: '{
       "type": "sriov",
-      "cniVersion" : "v0.3.1",
+      "cniVersion" : "0.3.1",
       "vlan": 1000,
       "ipam": {
         "type": "host-local",
