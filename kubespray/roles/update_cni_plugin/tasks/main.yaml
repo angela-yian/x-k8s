@@ -1,0 +1,17 @@
+#
+# Update cni-plugin
+#
+
+# Download cni_plugin
+- name: Download cni_plugin
+  get_url:
+    url: https://github.com/containernetworking/plugins/releases/download/v0.8.4/cni-plugins-linux-amd64-v0.8.4.tgz
+    dest: /tmp/releases
+
+# unarchive cni_plugin
+- name: CNI | Copy cni plugins
+  unarchive:
+    src: "/tmp/releases/cni-plugins-linux-amd64-v0.8.4.tgz"
+    dest: "/opt/cni/bin"
+    mode: 0755
+    remote_src: yes
