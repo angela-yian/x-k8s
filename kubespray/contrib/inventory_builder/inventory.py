@@ -20,6 +20,8 @@
 # Add range of hosts: inventory.py 10.10.1.3-10.10.1.5
 # Add hosts with different ip and access ip:
 # inventory.py 10.0.0.1,192.168.10.1 10.0.0.2,192.168.10.2 10.0.0.3,192.168.1.3
+# Add hosts with a specific hostname, ip, and optional access ip:
+# inventory.py first,10.0.0.1,192.168.10.1 second,10.0.0.2 last,10.0.0.3
 # Delete a host: inventory.py -10.10.1.3
 # Delete a host by id: inventory.py -node1
 #
@@ -44,7 +46,8 @@ import sys
 ROLES = ['all', 'kube-master', 'kube-node', 'etcd', 'k8s-cluster',
          'calico-rr']
 PROTECTED_NAMES = ROLES
-AVAILABLE_COMMANDS = ['help', 'print_cfg', 'print_ips', 'load']
+AVAILABLE_COMMANDS = ['help', 'print_cfg', 'print_ips', 'print_hostnames',
+                      'load']
 _boolean_states = {'1': True, 'yes': True, 'true': True, 'on': True,
                    '0': False, 'no': False, 'false': False, 'off': False}
 yaml = YAML()
@@ -59,6 +62,7 @@ def get_var_as_bool(name, default):
 
 
 CONFIG_FILE = os.environ.get("CONFIG_FILE", "./inventory/sample/hosts.yaml")
+KUBE_MASTERS = int(os.environ.get("KUBE_MASTERS_MASTERS", 2))
 # Reconfigures cluster distribution at scale
 SCALE_THRESHOLD = int(os.environ.get("SCALE_THRESHOLD", 50))
 MASSIVE_SCALE_THRESHOLD = int(os.environ.get("SCALE_THRESHOLD", 200))
@@ -78,7 +82,7 @@ class KubesprayInventory(object):
             try:
                 self.hosts_file = open(config_file, 'r')
                 self.yaml_config = yaml.load(self.hosts_file)
-            except FileNotFoundError:
+            except OSError:
                 pass
 
         if changed_hosts and changed_hosts[0] in AVAILABLE_COMMANDS:
@@ -96,9 +100,10 @@ class KubesprayInventory(object):
             etcd_hosts_count = 3 if len(self.hosts.keys()) >= 3 else 1
             self.set_etcd(list(self.hosts.keys())[:etcd_hosts_count])
             if len(self.hosts) >= SCALE_THRESHOLD:
-                self.set_kube_master(list(self.hosts.keys())[etcd_hosts_count:5])
+                self.set_kube_master(list(self.hosts.keys())[
+                    etcd_hosts_count:(etcd_hosts_count + KUBE_MASTERS)])
             else:
-                self.set_kube_master(list(self.hosts.keys())[:2])
+                self.set_kube_master(list(self.hosts.keys())[:KUBE_MASTERS])
             self.set_kube_node(self.hosts.keys())
             if len(self.hosts) >= SCALE_THRESHOLD:
                 self.set_calico_rr(list(self.hosts.keys())[:etcd_hosts_count])
@@ -192,8 +197,21 @@ class KubesprayInventory(object):
                                         'ip': ip,
                                         'access_ip': access_ip}
             elif host[0].isalpha():
-                raise Exception("Adding hosts by hostname is not supported.")
-
+                if ',' in host:
+                    try:
+                        hostname, ip, access_ip = host.split(',')
+                    except Exception:
+                        hostname, ip = host.split(',')
+                        access_ip = ip
+                if self.exists_hostname(all_hosts, host):
+                    self.debug("Skipping existing host {0}.".format(host))
+                    continue
+                elif self.exists_ip(all_hosts, ip):
+                    self.debug("Skipping existing host {0}.".format(ip))
+                    continue
+                all_hosts[hostname] = {'ansible_host': access_ip,
+                                       'ip': ip,
+                                       'access_ip': access_ip}
         return all_hosts
 
     def range2ips(self, hosts):
@@ -203,11 +221,11 @@ class KubesprayInventory(object):
             try:
                 # Python 3.x
                 start = int(ip_address(start_address))
-                end   = int(ip_address(end_address))
-            except:
+                end = int(ip_address(end_address))
+            except Exception:
                 # Python 2.7
-                start = int(ip_address(unicode(start_address)))
-                end   = int(ip_address(unicode(end_address)))
+                start = int(ip_address(str(start_address)))
+                end = int(ip_address(str(end_address)))
             return [ip_address(ip).exploded for ip in range(start, end + 1)]
 
         for host in hosts:
@@ -346,6 +364,8 @@ class KubesprayInventory(object):
             self.print_config()
         elif command == 'print_ips':
             self.print_ips()
+        elif command == 'print_hostnames':
+            self.print_hostnames()
         elif command == 'load':
             self.load_file(args)
         else:
@@ -359,11 +379,13 @@ Available commands:
 help - Display this message
 print_cfg - Write inventory file to stdout
 print_ips - Write a space-delimited list of IPs from "all" group
+print_hostnames - Write a space-delimited list of Hostnames from "all" group
 
 Advanced usage:
 Add another host after initial creation: inventory.py 10.10.1.5
 Add range of hosts: inventory.py 10.10.1.3-10.10.1.5
 Add hosts with different ip and access ip: inventory.py 10.0.0.1,192.168.10.1 10.0.0.2,192.168.10.2 10.0.0.3,192.168.10.3
+Add hosts with a specific hostname, ip, and optional access ip: first,10.0.0.1,192.168.10.1 second,10.0.0.2 last,10.0.0.3
 Delete a host: inventory.py -10.10.1.3
 Delete a host by id: inventory.py -node1
 
@@ -378,6 +400,9 @@ MASSIVE_SCALE_THRESHOLD Separate K8s master and ETCD if # of nodes >= 200
 
     def print_config(self):
         yaml.dump(self.yaml_config, sys.stdout)
+
+    def print_hostnames(self):
+        print(' '.join(self.yaml_config['all']['hosts'].keys()))
 
     def print_ips(self):
         ips = []
