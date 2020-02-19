@@ -37,11 +37,16 @@
   when:
     - http_proxy is defined
 
+- name: Gather host facts to get ansible_distribution_major_version
+  setup:
+    gather_subset: '!all'
+    filter: ansible_distribution_major_version
+
 # libselinux-python is required on SELinux enabled hosts
 # See https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#managed-node-requirements
-- name: Install libselinux-python
+- name: Install libselinux python package
   package:
-    name: libselinux-python
+    name: "{{ ( (ansible_distribution_major_version | int) < 8) | ternary('libselinux-python','python3-libselinux') }}"
     state: present
   become: true
   when:

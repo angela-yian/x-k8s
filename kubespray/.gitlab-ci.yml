@@ -1,8 +1,8 @@
 ---
 stages:
   - unit-tests
-  - moderator
   - deploy-part1
+  - moderator
   - deploy-part2
   - deploy-gce
   - deploy-special
@@ -30,14 +30,15 @@ variables:
 
 before_script:
   - ./tests/scripts/rebase.sh
-  - /usr/bin/python -m pip install -r tests/requirements.txt
+  - update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+  - python -m pip install -r tests/requirements.txt
   - mkdir -p /.ssh
 
 .job: &job
   tags:
     - packet
   variables:
-    KUBESPRAY_VERSION: v2.9.0
+    KUBESPRAY_VERSION: v2.11.0
   image: quay.io/kubespray/kubespray:$KUBESPRAY_VERSION
 
 .testcases: &testcases
@@ -45,6 +46,7 @@ before_script:
   services:
     - docker:dind
   before_script:
+    - update-alternatives --install /usr/bin/python python /usr/bin/python3 1
     - ./tests/scripts/rebase.sh
     - ./tests/scripts/testcases_prepare.sh
   script:
@@ -60,10 +62,11 @@ ci-authorized:
   script:
     - /bin/sh scripts/premoderator.sh
   except: ['triggers', 'master']
+  # Disable ci moderator
+  only: []
 
 include:
   - .gitlab-ci/lint.yml
   - .gitlab-ci/shellcheck.yml
-  - .gitlab-ci/digital-ocean.yml
   - .gitlab-ci/terraform.yml
   - .gitlab-ci/packet.yml

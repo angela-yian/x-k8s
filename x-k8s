@@ -36,7 +36,8 @@ from pathlib import Path
 import configparser
 
 basePath = str(Path().absolute())
-inventoryPath = basePath+'/kubespray/inventory/mycluster/hosts.ini'
+#inventoryPath = basePath+'/kubespray/inventory/mycluster/hosts.ini'
+inventoryPath = basePath+'/kubespray/inventory/mycluster/hosts.yaml'
 playbookPath = basePath+'/kubespray/cluster.yml'
 extraVarPath = basePath+'/kubespray/extraVars.yml'
 resetPath = basePath+'/kubespray/reset.yml'
@@ -48,7 +49,8 @@ def install():
     mycli = getattr(__import__("ansible.cli.playbook", fromlist=['PlaybookCLI']), 'PlaybookCLI')
     ansirbleArgs = ['ansible-playbook', '-i', inventoryPath, 
             playbookPath, 
-            "-e", "@"+extraVarPath, 
+            "-e", "@"+extraVarPath,
+            "--become",
             "--become-user=root"]
     cli = mycli(ansirbleArgs)
     cli.parse()
@@ -60,7 +62,7 @@ def reset():
     if '--i' in cliArg and cliArg['--i']:
         inventoryPath = './'+cliArg['--i']
     mycli = getattr(__import__("ansible.cli.playbook", fromlist=['PlaybookCLI']), 'PlaybookCLI')
-    ansirbleArgs = ['ansible-playbook', '-i', inventoryPath, resetPath, "--become-user=root"]
+    ansirbleArgs = ['ansible-playbook', '-i', inventoryPath, resetPath, "--become", "--become-user=root"]
     cli = mycli(ansirbleArgs)
     cli.parse()
     exitCode = cli.run()
