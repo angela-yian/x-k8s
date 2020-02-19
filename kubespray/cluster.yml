@@ -80,8 +80,8 @@
     - { role: network_plugin, tags: network }
     - { role: kubernetes/node-label }
 
-- hosts: k8s-cluster	
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"	
+- hosts: k8s-cluster
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:
     - {role: build_cmk, when: "cmk_enabled |  default(false) "}
     - {role: build_sriov, when: "sriov_enabled |  default(false) "}
@@ -122,20 +122,20 @@
     - { role: kubernetes/preinstall, when: "dns_mode != 'none' and resolvconf_mode == 'host_resolvconf'", tags: resolvconf, dns_late: true }
 
 - hosts: kube-master
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"	
-  roles:	
-    - run_nfd	
-    - {role: run_cmk, when: "cmk_enabled |  default(false) "}	
-    - {role: run_sriov, when: "sriov_enabled |  default(false) "}	
-    - {role: install_efk, when: "install_efk | default(false) "}	
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  roles:
+    - run_nfd
+    - {role: run_cmk, when: "cmk_enabled |  default(false) "}
+    - {role: run_sriov, when: "sriov_enabled |  default(false) "}
+    - {role: install_efk, when: "install_efk | default(false) "}
 
-- hosts: k8s-cluster	
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"	
-  roles:	
-    - { role: monitor_tools/predeploy, when: "monitor_enabled | default(false)" }	
-    - { role: update_cni_plugin}	
+- hosts: k8s-cluster
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  roles:
+    - { role: monitor_tools/predeploy, when: "monitor_enabled | default(false)" }
+    - { role: update_cni_plugin}
 
-- hosts: kube-master	
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"	
-  roles:	
+- hosts: kube-master
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  roles:
     - { role: monitor_tools/prometheus_grafana, when: "monitor_enabled | default(false)" }
