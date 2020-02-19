@@ -4,6 +4,8 @@
     src: "cni-canal.conflist.j2"
     dest: "/etc/cni/net.d/{% if calico_version is version('v3.3.0', '>=') %}canal.conflist.template{% else %}10-canal.conflist{% endif %}"
     owner: kube
+  register: canal_conflist
+  notify: reset_canal_cni
 
 - name: Canal | Create canal certs directory
   file:
@@ -31,7 +33,7 @@
     '{ "Network": "{{ kube_pods_subnet }}", "SubnetLen": {{ kube_network_node_prefix }}, "Backend": { "Type": "{{ flannel_backend_type }}" } }'
   retries: 4
   delay: "{{ retry_stagger | random + 3 }}"
-  delegate_to: "{{groups['etcd'][0]}}"
+  delegate_to: "{{ groups['etcd'][0] }}"
   changed_when: false
   run_once: true
   environment:
@@ -40,8 +42,8 @@
 
 - name: Canal | Create canal node manifests
   template:
-    src: "{{item.file}}.j2"
-    dest: "{{kube_config_dir}}/{{item.file}}"
+    src: "{{ item.file }}.j2"
+    dest: "{{ kube_config_dir }}/{{ item.file }}"
   with_items:
     - {name: canal-config, file: canal-config.yaml, type: cm}
     - {name: canal-node, file: canal-node.yaml, type: ds}

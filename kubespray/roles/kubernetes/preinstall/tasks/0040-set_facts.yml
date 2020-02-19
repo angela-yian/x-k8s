@@ -1,22 +1,24 @@
 ---
-- set_fact:
+- name: set architecture_groups
+  set_fact:
     architecture_groups:
       x86_64: amd64
       aarch64: arm64
+      armv7l: arm
 
 - name: ansible_architecture_rename
   set_fact:
     host_architecture: >-
       {%- if ansible_architecture in architecture_groups -%}
-      {{architecture_groups[ansible_architecture]}}
+      {{ architecture_groups[ansible_architecture] }}
       {%- else -%}
-       {{ansible_architecture}}
+       {{ ansible_architecture }}
       {% endif %}
 
 - name: Force binaries directory for Container Linux by CoreOS
   set_fact:
     bin_dir: "/opt/bin"
-  when: ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
+  when: ansible_os_family in ["CoreOS", "Coreos", "Container Linux by CoreOS"]
   tags:
     - facts
 
@@ -25,10 +27,12 @@
     path: /run/ostree-booted
   register: ostree
 
-- set_fact:
+- name: set is_atomic
+  set_fact:
     is_atomic: "{{ ostree.stat.exists }}"
 
-- set_fact:
+- name: set kube_cert_group on atomic hosts
+  set_fact:
     kube_cert_group: "kube"
   when: is_atomic
 
@@ -39,14 +43,20 @@
   changed_when: false
   check_mode: no
 
-- set_fact:
+- name: check systemd-resolved
+  command: systemctl is-active systemd-resolved
+  register: systemd_resolved_enabled
+  failed_when: false
+  changed_when: false
+  check_mode: no
+
+- name: set dns facts
+  set_fact:
     resolvconf: >-
       {%- if resolvconf.rc == 0 -%}true{%- else -%}false{%- endif -%}
-
-- set_fact:
     bogus_domains: |-
       {% for d in [ 'default.svc.' + dns_domain, 'svc.' + dns_domain ] + searchdomains|default([]) -%}
-      {{dns_domain}}.{{d}}./{{d}}.{{d}}./com.{{d}}./
+      {{ dns_domain }}.{{ d }}./{{ d }}.{{ d }}./com.{{ d }}./
       {%- endfor %}
     cloud_resolver: >-
       {%- if cloud_provider is defined and cloud_provider == 'gce' -%}
@@ -75,12 +85,12 @@
       {%- if resolvconf|bool -%}/etc/resolvconf/resolv.conf.d/base{%- endif -%}
     head: >-
       {%- if resolvconf|bool -%}/etc/resolvconf/resolv.conf.d/head{%- endif -%}
-  when: not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
+  when: not ansible_os_family in ["CoreOS", "Coreos", "Container Linux by CoreOS"]
 
 - name: target temporary resolvconf cloud init file (Container Linux by CoreOS)
   set_fact:
     resolvconffile: /tmp/resolveconf_cloud_init_conf
-  when: ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
+  when: ansible_os_family in ["CoreOS", "Coreos", "Container Linux by CoreOS"]
 
 - name: check if /etc/dhclient.conf exists
   stat:
@@ -127,11 +137,11 @@
   set_fact:
     coredns_server: |-
       {%- if dns_mode == 'coredns' and not dns_early|bool -%}
-        {{ [ skydns_server ] + upstream_dns_servers|default([]) }}
+        {{ [ skydns_server ] }}
       {%- elif dns_mode == 'coredns_dual' and not dns_early|bool -%}
-        {{ [ skydns_server ] + [ skydns_server_secondary ] + upstream_dns_servers|default([]) }}
+        {{ [ skydns_server ] + [ skydns_server_secondary ] }}
       {%- elif dns_mode == 'manual' and not dns_early|bool -%}
-        {{ ( manual_dns_server.split(',') | list) + upstream_dns_servers|default([]) }}
+        {{ ( manual_dns_server.split(',') | list) }}
       {%- elif dns_early|bool -%}
         {{ upstream_dns_servers|default([]) }}
       {%- endif -%}
@@ -139,9 +149,9 @@
 - name: generate nameservers to resolvconf
   set_fact:
     nameserverentries:
-      nameserver {{( coredns_server + nameservers|d([]) + cloud_resolver|d([])) | join(',nameserver ')}}
+      nameserver {{ ( coredns_server + nameservers|d([]) + cloud_resolver|d([])) | unique | join(',nameserver ') }}
     supersede_nameserver:
-      supersede domain-name-servers {{( coredns_server + nameservers|d([]) + cloud_resolver|d([])) | join(', ') }};
+      supersede domain-name-servers {{ ( coredns_server + nameservers|d([]) + cloud_resolver|d([])) | unique | join(', ') }};
 
 - name: gather os specific variables
   include_vars: "{{ item }}"
@@ -165,3 +175,23 @@
   tags:
     - facts
     - kube-proxy
+
+- name: set etcd vars if using kubeadm mode
+  set_fact:
+    etcd_cert_dir: "{{ kube_cert_dir }}"
+    kube_etcd_cacert_file: "etcd/ca.crt"
+    kube_etcd_cert_file: "apiserver-etcd-client.crt"
+    kube_etcd_key_file: "apiserver-etcd-client.key"
+    etcd_deployment_type: host
+  when:
+    - etcd_kubeadm_enabled
+
+- name: check /usr readonly
+  stat:
+    path: "/usr"
+  register: usr
+
+- name: set alternate flexvolume path
+  set_fact:
+    kubelet_flexvolumes_plugins_dir: /var/lib/kubelet/volumeplugins
+  when: not usr.stat.writeable

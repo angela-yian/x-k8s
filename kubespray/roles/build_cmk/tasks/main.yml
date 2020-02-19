@@ -54,9 +54,9 @@
     pip:
       name: docker-py
 
-  - name: Pull CMK v1.3.1 image
+  - name: Pull CMK v1.4.0 image
     docker_image:
-      name: mjace/cmk:v1.3.1-0916
+      name: mjace/cmk:v1.4.0
     retries: 5
     register: reg
     until: reg | success

@@ -5,11 +5,14 @@ helm_enabled: true
 kube_network_plugin: flannel
 kube_network_plugin_multus: true
 
+## CMK Support
+cmk_enabled: true
+
 ## SRIOV Support
 sriov_enabled : true
 
 ## Monitor install Prometheus and Grafana
-monitor_enabled: false
+monitor_enabled: true
 grafana_password: "admin"
 
 ## Enable basic auth
@@ -21,4 +24,4 @@ grafana_password: "admin"
 # kube_apiserver_node_port_range: "9000-32767"
 
 ## Install Elasticsearch, Fluentd, Kibana
-install_efk : false
+install_efk : true
