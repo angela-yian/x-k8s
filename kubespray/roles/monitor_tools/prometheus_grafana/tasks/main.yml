@@ -184,12 +184,18 @@
     repo: 'https://github.com/helm/charts.git'
     dest: "{{ charts_dir }}"
 
+- name: Update Prometheus Dependency
+  shell: helm dependency update
+  args:
+    chdir: "{{ charts_dir }}/stable/prometheus"
+
 - name: Helm install prometheus
   shell: |
     sleep 30
     helm install stable/prometheus --values stable/prometheus/values.yaml --name x --set alertmanager.persistentVolume.enabled=true,alertmanager.persistentVolume.accessModes=ReadWriteMany,alertmanager.persistentVolume.existingClaim=alertmanager-pvc,alertmanager.persistentVolume.mountPath=/data/prometheus/alertmanager,alertmanager.persistentVolume.storageClass=alertmanager --set pushgateway.persistentVolume.enabled=true,pushgateway.persistentVolume.accessModes=ReadWriteMany,pushgateway.persistentVolume.existingClaim=pushgateway-pvc,pushgateway.persistentVolume.mountPath=/data/prometheus/pushgateway,pushgateway.persistentVolume.storageClass=pushgateway --set server.persistentVolume.enabled=true,server.persistentVolume.accessModes=ReadWriteMany,server.persistentVolume.existingClaim=server-pvc,server.persistentVolume.mountPath=/data/prometheus/server,server.persistentVolume.storageClass=server,server.service.type=NodePort,server.service.nodePort=30250,server.securityContext.enabled=false
   args:
     chdir: "{{ charts_dir }}"
+
 - name: Helm install grafana
   shell: |
     sleep 30
