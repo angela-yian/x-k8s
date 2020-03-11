@@ -1,0 +1,53 @@
+
+---
+- name: Kubeadm reset
+  shell: kubeadm reset -f
+
+- name: Remove related packages
+  shell: sudo apt-get purge kubeadm kubectl kubelet kubernetes-cni kube* -y
+
+- name: apt auto remove
+  shell: sudo apt-get purge kubeadm kubectl kubelet kubernetes-cni kube* -y
+
+- name: Remove kube config dir
+  shell: sudo rm -rf ~/.kube
+
+- name: Remove kubernetes manifests
+  shell: sudo rm -rf /etc/kubernetes
+
+- name: Remove additional plugin packages
+  shell: sudo rm -rf /opt/*
+
+- name: Remove CMK manifests
+  shell: sudo rm -rf /etc/cmk
+
+- name: Remove docker packages
+  shell: sudo apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli --allow-change-held-packages
+
+- name: Auto remove docker packages
+  shell: sudo apt-get autoremove -y --purge docker-engine docker docker.io docker-ce docker-ce-cli --allow-change-held-packages
+
+- name: Remove /var/lib/docker
+  shell: sudo rm -rf /var/lib/docker
+
+- name: Rmove docker app armor
+  shell: sudo rm /etc/apparmor.d/docker
+
+- name: Remove docker group
+  shell: sudo groupdel docker
+
+- name: Remove docker socket
+  shell: sudo rm -rf /var/run/docker.sock
+
+- name: Purge kubeadm
+  shell: sudo rm -rf /var/run/docker.sock
+
+- name: Ip link delete docker0
+  shell: sudo rm -rf /var/run/docker.sock
+
+- name: Ip link delete cni0
+  shell: ip link delete cni0
+
+- name: Ip link delete Flannel.1 
+  shell: ip link delete flannel.1
+

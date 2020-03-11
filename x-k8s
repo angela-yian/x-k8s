@@ -5,6 +5,7 @@
 Usage: 
     ./x-k8s install [--i=<hosts>]
     ./x-k8s reset [--i=<hosts>]
+    ./x-k8s purge [--i=<hosts>]
     ./x-k8s list inventory [--vars]
     ./x-k8s ( -h | --help)
     ./x-k8s ( -v | --version)
@@ -41,6 +42,7 @@ inventoryPath = basePath+'/kubespray/inventory/mycluster/hosts.yaml'
 playbookPath = basePath+'/kubespray/cluster.yml'
 extraVarPath = basePath+'/kubespray/extraVars.yml'
 resetPath = basePath+'/kubespray/reset.yml'
+purgePath = basePath+'/kubespray/purge.yml'
 
 def install():
     global inventoryPath
@@ -68,6 +70,17 @@ def reset():
     exitCode = cli.run()
     return exitCode
 
+def purge():
+    global inventoryPath
+    if '--i' in cliArg and cliArg['--i']:
+        inventoryPath = './'+cliArg['--i']
+    mycli = getattr(__import__("ansible.cli.playbook", fromlist=['PlaybookCLI']), 'PlaybookCLI')
+    ansirbleArgs = ['ansible-playbook', '-i', inventoryPath, purgePath, "--become", "--become-user=root"]
+    cli = mycli(ansirbleArgs)
+    cli.parse()
+    exitCode = cli.run()
+    return exitCode
+
 def listInventory():
     global cliArg
     mycli = getattr(__import__("ansible.cli.inventory", fromlist=['InventoryCLI']), 'InventoryCLI')
@@ -86,6 +99,8 @@ def main():
         install()
     elif 'reset' in cliArg and cliArg['reset']:
         reset()
+    elif 'purge' in cliArg and cliArg['purge']:
+        purge()
     elif 'list' in cliArg and cliArg['list']:
         if 'inventory' in cliArg and cliArg['inventory']:
             listInventory()
