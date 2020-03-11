@@ -2,52 +2,69 @@
 ---
 - name: Kubeadm reset
   shell: kubeadm reset -f
+  ignore_errors: yes
 
 - name: Remove related packages
   shell: sudo apt-get purge kubeadm kubectl kubelet kubernetes-cni kube* -y
+  ignore_errors: yes
 
 - name: apt auto remove
-  shell: sudo apt-get purge kubeadm kubectl kubelet kubernetes-cni kube* -y
+  shell: sudo apt-get autoremove -y
+  ignore_errors: yes
 
 - name: Remove kube config dir
   shell: sudo rm -rf ~/.kube
+  ignore_errors: yes
 
 - name: Remove kubernetes manifests
   shell: sudo rm -rf /etc/kubernetes
+  ignore_errors: yes
 
 - name: Remove additional plugin packages
   shell: sudo rm -rf /opt/*
+  ignore_errors: yes
 
 - name: Remove CMK manifests
   shell: sudo rm -rf /etc/cmk
+  ignore_errors: yes
 
 - name: Remove docker packages
   shell: sudo apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli --allow-change-held-packages
+  ignore_errors: yes
 
 - name: Auto remove docker packages
   shell: sudo apt-get autoremove -y --purge docker-engine docker docker.io docker-ce docker-ce-cli --allow-change-held-packages
+  ignore_errors: yes
 
 - name: Remove /var/lib/docker
   shell: sudo rm -rf /var/lib/docker
+  ignore_errors: yes
 
 - name: Rmove docker app armor
   shell: sudo rm /etc/apparmor.d/docker
+  ignore_errors: yes
 
 - name: Remove docker group
   shell: sudo groupdel docker
+  ignore_errors: yes
 
 - name: Remove docker socket
   shell: sudo rm -rf /var/run/docker.sock
+  ignore_errors: yes
 
 - name: Purge kubeadm
   shell: sudo rm -rf /var/run/docker.sock
+  ignore_errors: yes
 
 - name: Ip link delete docker0
   shell: sudo rm -rf /var/run/docker.sock
+  ignore_errors: yes
 
 - name: Ip link delete cni0
   shell: ip link delete cni0
+  ignore_errors: yes
 
 - name: Ip link delete Flannel.1 
   shell: ip link delete flannel.1
+  ignore_errors: yes
 
