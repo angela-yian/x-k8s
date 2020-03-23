@@ -1,0 +1,9 @@
+#
+# Install Prometheus Operator by by helm
+#
+
+- name: Install Prometheus Operator
+  shell: helm install --name po stable/prometheus-operator
+
+- name: Install Prometheus Adapter
+  shell: helm install --name pa stable/prometheus-adapter

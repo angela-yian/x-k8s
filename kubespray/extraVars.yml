@@ -9,7 +9,7 @@ kube_network_plugin_multus: true
 sriov_enabled : true
 
 ## Monitor install Prometheus and Grafana
-monitor_enabled: false
+monitor_enabled: true
 grafana_password: "admin"
 
 ## Enable basic auth
