@@ -18,9 +18,9 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 |Flannel        |v0.11.0        |
 |Flannel-CNI    |v0.3.0         |
 |SRIOV-CNI      |v2.1.0         |
-|SRIOV-Device Plugin |v3.0      | 
-|Prometheus     |v2.11.1        |
-|Grafana        |v6.2.5         |
+|SRIOV-Device Plugin |v3.0      |
+|Prometheus Operator     |v0.37.0        |
+|Grafana        |v6.6.2         |
 |Elastic Search |v6.3.2         |
 |Kibana         |v6.3.2         |
 |fluentd        |v2.2.0         |
