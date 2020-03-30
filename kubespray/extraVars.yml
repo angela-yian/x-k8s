@@ -13,7 +13,8 @@ sriov_enabled : true
 
 ## Monitor install Prometheus and Grafana
 monitor_enabled: true
-grafana_password: "admin"
+## Grafana Password (Default: password)
+#grafana_password: "admin"
 
 ## Enable basic auth
 # kube_basic_auth: true
