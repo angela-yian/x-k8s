@@ -1,0 +1,10 @@
+
+#
+# Install Prometheus Operator by by helm
+#
+
+- name: Install Prometheus Operator
+  shell: helm install --name po stable/prometheus-operator
+
+- name: Install Prometheus Adapter
+  shell: helm install --name pa --set prometheus.url=http://po-prometheus-operator-prometheus.default.svc,prometheus.port=9090 stable/prometheus-adapter
