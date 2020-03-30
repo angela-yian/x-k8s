@@ -1,4 +1,4 @@
-# X-K8S SRIOV Manual 
+# X-K8S SRIOV Manual
 
 ## Pre-Configure Before you install X-K8S  
 
@@ -157,9 +157,10 @@ root@node1:~# kubectl get node node2 -o json | jq .status.capacity
       }
     }'
     ```
+
     If you want to define the interface name go check [HERE](https://github.com/intel/multus-cni/blob/master/doc/how-to-use.md#lauch-pod-with-text-annotation-for-networkattachmentdefinition-in-different-namespace)
 
-1. Create and apply the pod.
+2. Create and apply the pod.
     e.g.
 
     ```yaml=
@@ -185,4 +186,106 @@ root@node1:~# kubectl get node node2 -o json | jq .status.capacity
             intel.com/sriov_net_A: '1'
     ```
 
-2. You should see a nic in pod with the same net CIDR you define in "sriov-net-a"
+3. You should see a nic in pod with the same net CIDR you define in "sriov-net-a"
+
+## Static IP Example
+
+### Define IP in net-attach-def file
+
+net-attach-def
+
+```yaml
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriov-static
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: intel.com/sriov_pool_b
+spec:
+  config: '{
+  "type": "sriov",
+  "vlan": 1000,
+  "if0name": "sriov-b",
+  "ipam": {
+    "type": "static",
+    "addresses": [
+      {
+        "address":"10.1.2.1/24"
+      }
+    ]
+    }
+  }'
+```
+
+pod
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: staticpod
+  annotations:
+    k8s.v1.cni.cncf.io/networks: sriov-static
+spec:
+  containers:
+    - name: appcntr1
+      image: juamorous/ubuntu-ifconfig-ping
+      imagePullPolicy: IfNotPresent
+      command: [ "/bin/bash", "-c", "--" ]
+      args: [ "while true; do sleep 300000; done;" ]
+      resources:
+        requests:
+          intel.com/sriov_pool_b: '1'
+        limits:
+          intel.com/sriov_pool_b: '1'
+
+```
+
+### Define IP in Pod's annotation
+
+net-attach-def
+
+```yaml
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriov-static
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: intel.com/sriov_net_A
+spec:
+  config: '{
+  "type": "sriov",
+  "capabilities": { "ips": true },
+  "vlan": 1000,
+  "if0name": "sriov-b",
+  "ipam": {
+    "type": "static"
+    }
+  }'
+```
+
+pod
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: staticpod
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "sriov-static",
+              "ips": [ "10.1.1.104/24" ] }
+    ]'
+spec:
+  containers:
+    - name: appcntr1
+      image: juamorous/ubuntu-ifconfig-ping
+      imagePullPolicy: IfNotPresent
+      command: [ "/bin/bash", "-c", "--" ]
+      args: [ "while true; do sleep 300000; done;" ]
+      resources:
+        requests:
+          intel.com/sriov_net_A: '1'
+        limits:
+          intel.com/sriov_net_A: '1'
+```
