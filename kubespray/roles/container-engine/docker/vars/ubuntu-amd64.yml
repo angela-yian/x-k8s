@@ -18,6 +18,10 @@ docker_versioned_pkg:
 docker_package_info:
   pkg_mgr: apt
   pkgs:
+    # https://github.com/kubernetes-sigs/kubespray/issues/6160
+    # Pin docker-ce-cli version to 19.03.8 as 19.03.9 is not compatible with docker-ce version 18.06/09
+    - name: "docker-ce-cli=5:19.03.8~3-0~ubuntu-{{ ansible_distribution_release|lower }}"
+      force: yes
     - name: "{{ docker_versioned_pkg[docker_version | string] }}"
       force: yes
 

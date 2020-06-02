@@ -12,7 +12,7 @@ cmk_enabled: true
 sriov_enabled : true
 
 ## Monitor install Prometheus and Grafana
-monitor_enabled: true
+monitor_enabled: false
 ## Grafana Password (Default: password)
 #grafana_password: "admin"
 
@@ -25,4 +25,4 @@ monitor_enabled: true
 # kube_apiserver_node_port_range: "9000-32767"
 
 ## Install Elasticsearch, Fluentd, Kibana
-install_efk : true
+install_efk : false
