@@ -133,10 +133,9 @@
 - hosts: k8s-cluster
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:
-    - { role: monitor_tools/predeploy, when: "monitor_enabled | default(false)" }
     - { role: update_cni_plugin}
 
 - hosts: kube-master
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:
-    - { role: monitor_tools/prometheus_grafana, when: "monitor_enabled | default(false)" }
+    - { role: install_prometheus_operator, when: "monitor_enabled | default(false)" }

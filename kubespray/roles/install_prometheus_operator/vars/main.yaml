@@ -1,0 +1,1 @@
+custom_grafana_password: "{{grafana_password | default('password')}}"
