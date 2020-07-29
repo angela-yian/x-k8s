@@ -12,11 +12,14 @@ Usage:
 
 Examples:
     ./x-k8s install                     Install x-k8s.
-    ./x-k8s install --i kubespray/inventory/custom/hosts.ini
+    ./x-k8s install --i kubespray/inventory/custom/hosts.yaml
                                         Install x-k8s using custom inventory.
     ./x-k8s reset                       Reset host environment listed in inventory.
-    ./x-k8s reset --i kubespray/inventory/custom/hosts.ini
+    ./x-k8s reset --i kubespray/inventory/custom/hosts.yaml
                                         Reset host environment using custom inventory.
+    ./x-k8s purge                       Purge x-k8s cluseter.
+    ./x-k8s purge --i kubespray/inventory/custom/hosts.yaml
+                                        Purge cluster using custom inventory.
     ./x-k8s list inventory              List hosts inventory.
     ./x-k8s list inventory --vars       List hosts inventory with all variables.
     ./x-k8s -h                          
@@ -28,7 +31,7 @@ Options:
     -h, --help                          Show this message.
     -v, --version                       Show version.
     --vars                              List hosts inventor with all variables.
-    --i=<hosts>                         Path to custom inventory hosts.ini
+    --i=<hosts>                         Path to custom inventory hosts.yaml
 
 """
 
@@ -37,7 +40,6 @@ from pathlib import Path
 import configparser
 
 basePath = str(Path().absolute())
-#inventoryPath = basePath+'/kubespray/inventory/mycluster/hosts.ini'
 inventoryPath = basePath+'/kubespray/inventory/mycluster/hosts.yaml'
 playbookPath = basePath+'/kubespray/cluster.yml'
 extraVarPath = basePath+'/kubespray/extraVars.yml'
@@ -109,5 +111,5 @@ def main():
 
 
 if __name__ == "__main__":
-    cliArg = docopt(__doc__, version='v1.4.1')
+    cliArg = docopt(__doc__, version='v1.4.x')
     main()

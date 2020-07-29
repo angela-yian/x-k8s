@@ -19,8 +19,8 @@ For the detail deploy instruction, check the kubespray's [readme](https://github
 |Flannel-CNI    |v0.3.0         |
 |SRIOV-CNI      |v2.2           |
 |SRIOV-Device Plugin |v3.1      |
-|Prometheus     |v2.11.1        |
-|Grafana        |v6.2.5         |
+|Prometheus Operator     |v0.37.0        |
+|Grafana        |v6.6.2         |
 |Elastic Search |v6.3.2         |
 |Kibana         |v6.3.2         |
 |fluentd        |v2.2.0         |
@@ -138,17 +138,21 @@ X-K8S Installer
 Usage:  
     ./x-k8s install [--i=<hosts>]
     ./x-k8s reset [--i=<hosts>]
+    ./x-k8s purge [--i=<hosts>]
     ./x-k8s list inventory [--vars]
     ./x-k8s ( -h | --help)
     ./x-k8s ( -v | --version)
 
 Examples:
     ./x-k8s install                     Install x-k8s.
-    ./x-k8s install --i kubespray/inventory/custom/hosts.ini
+    ./x-k8s install --i kubespray/inventory/custom/hosts.yaml
                                         Install x-k8s using custom inventory.
     ./x-k8s reset                       Reset host environment listed in inventory.
-    ./x-k8s reset --i kubespray/inventory/custom/hosts.ini
+    ./x-k8s reset --i kubespray/inventory/custom/hosts.yaml
                                         Reset host environment using custom inventory.
+    ./x-k8s purge                       Purge x-k8s cluseter.
+    ./x-k8s purge --i kubespray/inventory/custom/hosts.yaml
+                                        Purge cluster using custom inventory.
     ./x-k8s list inventory              List hosts inventory.
     ./x-k8s list inventory --vars       List hosts inventory with all variables.
     ./x-k8s -h  
