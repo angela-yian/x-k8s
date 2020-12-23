@@ -1,13 +1,13 @@
 all:
   hosts:
     node1:
-      ansible_host: 100.86.1.104
-      ip: 100.86.1.104
-      access_ip: 100.86.1.104
-      #    node2:
-      #ansible_host: 100.86.1.106
-      #ip: 100.86.1.106
-      #access_ip: 100.86.1.106
+      ansible_host: 192.168.174.146
+      ip: 192.168.174.146
+      access_ip: 192.168.174.146
+   # node2:
+   #   ansible_host: 100.86.1.106
+   #   ip: 100.86.1.106
+   #   access_ip: 100.86.1.106
   children:
     kube-master:
       hosts:
@@ -15,7 +15,7 @@ all:
     kube-node:
       hosts:
         node1:
-        # node2:
+       #node2:
     etcd:
       hosts:
         node1:
